@@ -29,8 +29,13 @@ const VideoLandingPage = async (props: {
 }) => {
   const { locale, slug } = await props.params
 
-  const t = await getTranslations("page-videos")
+  // Must run before any other next-intl API, otherwise next-intl reads the
+  // locale from request headers and opts the route into dynamic rendering,
+  // triggering "Page changed from static to dynamic at runtime" for slugs
+  // rendered on-demand (i.e. not covered by generateStaticParams).
   setRequestLocale(locale)
+
+  const t = await getTranslations("page-videos")
 
   let data: VideoData | undefined
   try {
@@ -109,6 +114,11 @@ export async function generateMetadata(props: {
   params: Promise<{ locale: string; slug: string }>
 }): Promise<Metadata> {
   const { locale, slug } = await props.params
+
+  // Set the locale before any next-intl API (getMetadata calls getTranslations)
+  // so metadata generation for on-demand slugs stays static instead of reading
+  // request headers.
+  setRequestLocale(locale)
 
   let data
   try {
