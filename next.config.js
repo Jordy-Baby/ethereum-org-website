@@ -126,6 +126,16 @@ module.exports = (phase) => {
     serverExternalPackages: ["pino-pretty", "lokijs", "encoding"],
     trailingSlash: true,
     images: {
+      // Disable Next.js's on-disk image cache. Next 16's image optimizer
+      // eagerly initializes a disk LRU cache that calls
+      // `mkdir('.next/cache/images')` at runtime. On Netlify's read-only
+      // Lambda filesystem (`/var/task`) this mkdir fails with ENOENT and, since
+      // the init promise is created eagerly and never awaited at that point,
+      // surfaces as an unhandled promise rejection. The local disk cache is
+      // useless on ephemeral read-only functions anyway -- optimized images are
+      // served via Netlify's image CDN (NEXT_FORCE_EDGE_IMAGES). Setting this to
+      // 0 skips disk-cache initialization entirely.
+      maximumDiskCacheSize: 0,
       qualities: [5, 10, 20, 35, 40, 75, 90, 100],
       deviceSizes: [640, 750, 828, 1080, 1200, 1504, 1920],
       remotePatterns: [
